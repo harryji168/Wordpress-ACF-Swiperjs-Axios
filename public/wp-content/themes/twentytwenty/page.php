@@ -36,7 +36,8 @@ get_header();
 
 		// }
         // vars
-              
+       $page_id = get_queried_object_id();      
+       //echo    $page_id;
 ?>
         <!-- Link Swiper's CSS -->
         <link
@@ -113,14 +114,14 @@ get_header();
     <!-- Swiper -->
     <div class="swiper mySwiper">
       <div class="swiper-wrapper">
-        <div class="swiper-slide"><img src="<?php echo get_field('image_1'); ?>"></div>
-        <div class="swiper-slide"><img src="<?php echo get_field('image_2'); ?>"></div>
-        <div class="swiper-slide"><img src="<?php echo get_field('image_3'); ?>"></div>
-        <div class="swiper-slide"><img src="<?php echo get_field('image_4'); ?>"></div>       
+        <div class="swiper-slide"><img  id="image_1" src="<?php echo get_field('image_1'); ?>"></div>
+        <div class="swiper-slide"><img  id="image_2" src="<?php echo get_field('image_2'); ?>"></div>
+        <div class="swiper-slide"><img  id="image_3" src="<?php echo get_field('image_3'); ?>"></div>
+        <div class="swiper-slide"><img  id="image_4" src="<?php echo get_field('image_4'); ?>"></div>       
       </div>
 
       
-      <div class="slide-captions"> <?php echo get_field('quote'); ?><br>
+      <div class="slide-captions" id="captions"> <?php echo get_field('quote'); ?><br>
         <?php echo get_field('title'); ?> <?php echo get_field('name'); ?> <?php echo get_field('company'); ?></div>
       <div class="swiper-pagination"></div>
       <div class="swiper-button-next"></div>
@@ -128,9 +129,9 @@ get_header();
     </div>
 
     <div class="wrap">	
-        <div style="text-align: center;"><p>Price : <?php echo get_field('price'); ?><br> 
-            Medium: <?php echo get_field('medium'); ?><br> 
-            Stylized(for Sale?): <?php echo get_field('stylized');?> 
+        <div style="text-align: center;"><p>Price : <span id=price><?php echo get_field('price'); ?></span><br> 
+            Medium: <span id=medium><?php echo get_field('medium'); ?></span><br> 
+            Stylized(for Sale?):<span id=stylized><?php echo get_field('stylized');?></span> 
             </p>
             <Button onclick="fetch_more()" id="fetch_more" >Fetch More Slides</Button>
         </div>
@@ -141,36 +142,63 @@ get_header();
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.min.js" integrity="sha256-S1J4GVHHDMiirir9qsXWc8ZWw74PHHafpsHp5PXtjTs=" crossorigin="anonymous"></script>
     <!-- Initialize Swiper -->
     <script >
-      var swiper = new Swiper(".mySwiper", {
-            pagination: {
-                el: '.swiper-pagination',
-                type: 'bullets',
-                clickable: true,
-            },
-
-            navigation : {
-                nextEl : '.swiper-button-next',
-                prevEl : '.swiper-button-prev',
-            },
-            slidesPerView : 'auto',
-            loop : true,
-            spaceBetween : 34
+      var swiper = new Swiper(".mySwiper",  {
+              slidesPerView: 3,
+              spaceBetween: 30,
+              centeredSlides: true,
+              autoplay: {
+                delay: 6000,
+                disableOnInteraction: false,
+              },                      
+              pagination: {
+                  el: '.swiper-pagination',
+                  type: 'bullets',
+                  clickable: true,
+              },
+              navigation : {
+                  nextEl : '.swiper-button-next',
+                  prevEl : '.swiper-button-prev',
+              },
+              slidesPerView : 'auto',
+              loop : true,
+              spaceBetween : 34
       });
       function fetch_more() {
          document.getElementById("fetch_more").innerHTML = "Loading...";
-         let randomURL = 'https://source.unsplash.com/random/400x300';
-        //Good
-        //  axios.get(randomURL).then( data => {
-        //         // the url of the random img
-        //         console.log(data.request.responseURL);   
-        //         document.getElementById("fetch_more").innerHTML = "Fetch More Slides";
-        //  });
+         let randomURL = 'http://localhost/app/public/index.php/wp-json/wp/v2/pages';       
+         const random_array = [];
          const sendGetRequest = async () => {
             try { 
-                axios.get(randomURL).then( data => {
-                // the url of the random img
-                console.log(data.request.responseURL);   
+                axios.get(randomURL).then( response => {
+                const data=response.data;
+                for (const property in data) {
+                  // console.log(data[property]);
+                  // console.log(data[property]["id"]); 
+                  // console.log(data[property]["slug"]); 
+                  var title=data[property]["slug"];
+                  if(title.includes("art") && data[property]["id"]!=<?php echo $page_id;?>){
+                    // random_array.push(data[property]["id"]);
+                     random_array.push(property);
+                  }
+                }
+               // console.log(random_array); 
+                const next_id=random_array[Math.floor(Math.random() * random_array.length)];
+               // console.log(next_id); 
+                console.log(data[next_id]["acf"]);  
+                document.getElementById("price").innerHTML=data[next_id]["acf"]["price"];
+                document.getElementById("medium").innerHTML=data[next_id]["acf"]["medium"];
+                document.getElementById("stylized").innerHTML=data[next_id]["acf"]["stylized"];
+
+                document.getElementById("captions").innerHTML=data[next_id]["acf"]["quote"]+"<br>"+data[next_id]["acf"]["title"]+data[next_id]["acf"]["name"]+data[next_id]["acf"]["company"];
+                document.getElementById("image_1").src = data[next_id]["acf"]["image_1"];
+                document.getElementById("image_2").src = data[next_id]["acf"]["image_2"];
+                document.getElementById("image_3").src = data[next_id]["acf"]["image_3"];
+                document.getElementById("image_4").src = data[next_id]["acf"]["image_4"];              
+                swiper.update();
+                swiper.slideTo(0);
+                
                 document.getElementById("fetch_more").innerHTML = "Fetch More Slides";
+                
                });
             } catch (err) {
                 // Handle Error Here
