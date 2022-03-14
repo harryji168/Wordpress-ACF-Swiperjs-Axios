@@ -20,7 +20,7 @@ get_header();
 <main id="site-content">
 
 	<?php
-
+ 
 	if ( have_posts() ) {
 
 		// $i = 0;
@@ -38,6 +38,7 @@ get_header();
         // vars
        $page_id = get_queried_object_id();      
        //echo    $page_id;
+       //echo get_bloginfo('url');
 ?>
         <!-- Link Swiper's CSS -->
         <link
@@ -165,7 +166,7 @@ get_header();
       });
       function fetch_more() {
          document.getElementById("fetch_more").innerHTML = "Loading...";
-         let randomURL = 'http://localhost/app/public/index.php/wp-json/wp/v2/pages';       
+         let randomURL = '<?php echo get_bloginfo('url');?>/index.php/wp-json/wp/v2/pages';       
          const random_array = [];
          const sendGetRequest = async () => {
             try { 
